@@ -12,17 +12,39 @@ def count_char(s, char):
     for i in s:
         if i == char:
             count += 1
+
     return count
+
 
 # Part B. is_power_of
 # Define a function is_power_of(i,j) that takes 2 ints i and j
 # and checks if i is a power of j or not
 # the function should return True indicating that i is a power of j
 # otherwise return False
-def is_power_of(i,j):
-  # YOUR CODE HERE
+def is_power_of(i, j):
+    #
+    if i == 1:
+        return 1 == j
+    elif i == 0:
+        return 0 == j
 
-  return
+    elif i < 0:
+        if i < j:
+          x = 1
+          while x < j:
+            x *= i
+        else:
+          x = 1
+          while x > j:
+            x *= i
+
+    else:
+        x = 1
+        while x < j:
+            x *= i
+
+    return x == j
+
 
 # Part C. longest_word
 # Define a function longest_word(s) that takes a string s
@@ -31,6 +53,6 @@ def is_power_of(i,j):
 # if 2 or more words are tied as longest then return the one that occurs LAST in the sentence
 # if s is an empty string return an empty string
 def longest_word(s):
-  # YOUR CODE HERE
+    # YOUR CODE HERE
 
-  return
+    return
