@@ -1,18 +1,20 @@
 # FLASK Tutorial 1 -- We show the bare bones code to get an app up and running
 
 # imports
-import os                            # os is used to get environment variables IP & PORT
-from flask import Flask              # Flask is the web app that we will customize
-from flask import render_template    # for main.css and index.html
-from flask import request            # for user input
-from flask import redirect, url_for  # for redirecting back to URLs within functions
-from database import db              # imports db from database.py
-from models import Note as Note      #
-from models import User as User      #
-from forms import RegisterForm       #
-from forms import LoginForm          #
-import bcrypt                        #
-from flask import session            #
+import os                              # os is used to get environment variables IP & PORT
+from flask import Flask                # Flask is the web app that we will customize
+from flask import render_template      # for main.css and index.html
+from flask import request              # for user input
+from flask import redirect, url_for    # for redirecting back to URLs within functions
+from database import db                # imports db from database.py
+from models import Note as Note        #
+from models import User as User        #
+from models import Comment as Comment  #
+from forms import RegisterForm         #
+from forms import LoginForm            #
+from forms import CommentForm          #
+import bcrypt                          #
+from flask import session              #
 
 app = Flask(__name__)     # create an app
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flask_note_app.db'
@@ -52,11 +54,17 @@ def get_notes():
 
 @app.route('/notes/<note_id>')
 def get_note(note_id):
-    a_user = db.session.query(User).filter_by(email='snetzley@uncc.edu').one()
-    # get note from database
-    my_note = db.session.query(Note).filter_by(id=note_id).one()
+    # check if a user is saved in session
+    if session.get('user'):
+        # get notes from database
+        my_note = db.session.query(Note).filter_by(id=note_id, user_id=session['user_id']).one()
 
-    return render_template('note.html', note=my_note, user=a_user)
+        # create a comment form objectt
+        form = CommentForm()
+
+        return render_template('note.html', note=my_note, user=session['user'], form=form)
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/notes/new', methods=['GET', 'POST'])
 def new_note():
@@ -188,6 +196,23 @@ def logout():
         session.clear()
 
     return redirect(url_for('index'))
+
+@app.route('/notes/<note_id>/comment', methods=['POST'])
+def new_comment(note_id):
+    if session.get('user'):
+        comment_form = CommentForm()
+        # validate_on_submit only validates using POST
+        if comment_form.validate_on_submit():
+            # get comment data
+            comment_text = request.form['comment']
+            new_record = Comment(comment_text, int(note_id), session['user_id'])
+            db.session.add(new_record)
+            db.session.commit()
+
+        return redirect(url_for('get_note', note_id=note_id))
+
+    else:
+        return redirect(url_for('login'))
 
 
 app.run(host=os.getenv('IP', '127.0.0.1'), port=int(os.getenv('PORT', 5000)), debug=True)
